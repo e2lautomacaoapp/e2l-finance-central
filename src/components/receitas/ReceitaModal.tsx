@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,11 +23,39 @@ export function ReceitaModal({ isOpen, onClose, receita }: ReceitaModalProps) {
     cliente: receita?.cliente || "",
     status: receita?.status || "pendente",
     formaPagamento: receita?.formaPagamento || "",
-    observacoes: receita?.observacoes || ""
+    observacoes: receita?.observacoes || "",
+    quantidadeParcelas: receita?.quantidadeParcelas || "1",
+    valorParcela: receita?.valorParcela || ""
   });
+
+  // Calcula automaticamente o valor da parcela quando valor total ou quantidade de parcelas mudam
+  useEffect(() => {
+    if (formData.formaPagamento === "Cartão de Crédito" && formData.valor && formData.quantidadeParcelas) {
+      const valorTotal = parseFloat(formData.valor);
+      const parcelas = parseInt(formData.quantidadeParcelas);
+      if (!isNaN(valorTotal) && !isNaN(parcelas) && parcelas > 0) {
+        const valorParcela = (valorTotal / parcelas).toFixed(2);
+        setFormData(prev => ({ ...prev, valorParcela }));
+      }
+    }
+  }, [formData.valor, formData.quantidadeParcelas, formData.formaPagamento]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validação adicional para cartão de crédito
+    if (formData.formaPagamento === "Cartão de Crédito") {
+      if (!formData.quantidadeParcelas || !formData.valorParcela) {
+        toast.error("Preencha a quantidade e valor das parcelas para cartão de crédito");
+        return;
+      }
+      
+      const parcelas = parseInt(formData.quantidadeParcelas);
+      if (parcelas < 1 || parcelas > 4) {
+        toast.error("Quantidade de parcelas deve ser entre 1 e 4");
+        return;
+      }
+    }
     
     // Aqui você integraria com Supabase
     console.log('Salvando receita:', formData);
@@ -38,6 +66,16 @@ export function ReceitaModal({ isOpen, onClose, receita }: ReceitaModalProps) {
 
   const handleChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleFormaPagamentoChange = (value: string) => {
+    setFormData(prev => ({ 
+      ...prev, 
+      formaPagamento: value,
+      // Reset campos de parcelas se não for cartão de crédito
+      quantidadeParcelas: value === "Cartão de Crédito" ? "1" : "",
+      valorParcela: value === "Cartão de Crédito" ? "" : ""
+    }));
   };
 
   return (
@@ -132,18 +170,55 @@ export function ReceitaModal({ isOpen, onClose, receita }: ReceitaModalProps) {
 
             <div className="space-y-2">
               <Label>Forma de Pagamento</Label>
-              <Select value={formData.formaPagamento} onValueChange={(value) => handleChange('formaPagamento', value)}>
+              <Select value={formData.formaPagamento} onValueChange={handleFormaPagamentoChange}>
                 <SelectTrigger className="input-field">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Pix">Pix</SelectItem>
-                  <SelectItem value="Cartão de Crédito">Cartão de Crédito (até 4x)</SelectItem>
+                  <SelectItem value="Cartão de Crédito">Cartão de Crédito</SelectItem>
                   <SelectItem value="Cartão de Débito">Cartão de Débito</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
+
+          {/* Campos condicionais para Cartão de Crédito */}
+          {formData.formaPagamento === "Cartão de Crédito" && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="quantidadeParcelas">Quantidade de Parcelas *</Label>
+                <Select 
+                  value={formData.quantidadeParcelas} 
+                  onValueChange={(value) => handleChange('quantidadeParcelas', value)}
+                >
+                  <SelectTrigger className="input-field">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">1x</SelectItem>
+                    <SelectItem value="2">2x</SelectItem>
+                    <SelectItem value="3">3x</SelectItem>
+                    <SelectItem value="4">4x</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="valorParcela">Valor da Parcela *</Label>
+                <Input
+                  id="valorParcela"
+                  type="number"
+                  step="0.01"
+                  placeholder="0,00"
+                  value={formData.valorParcela}
+                  onChange={(e) => handleChange('valorParcela', e.target.value)}
+                  required
+                  className="input-field"
+                />
+              </div>
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="observacoes">Observações</Label>
