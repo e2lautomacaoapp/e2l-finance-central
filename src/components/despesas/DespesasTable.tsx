@@ -4,9 +4,29 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Edit, Trash2, Eye } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface DespesasTableProps {
   searchTerm: string;
+  filters: {
+    status?: string;
+    formaPagamento?: string;
+    dataInicio?: string;
+    dataFim?: string;
+  };
+  onViewDetails: (despesa: any) => void;
+  onEditDespesa: (despesa: any) => void;
+  onDeleteDespesa: (despesa: any) => void;
 }
 
 const mockDespesas = [
@@ -45,14 +65,39 @@ const mockDespesas = [
   }
 ];
 
-export function DespesasTable({ searchTerm }: DespesasTableProps) {
+export function DespesasTable({ 
+  searchTerm, 
+  filters, 
+  onViewDetails, 
+  onEditDespesa, 
+  onDeleteDespesa 
+}: DespesasTableProps) {
   const [despesas] = useState(mockDespesas);
 
-  const filteredDespesas = despesas.filter(despesa =>
-    despesa.item.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    despesa.fornecedor.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    despesa.notaFiscal.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredDespesas = despesas.filter(despesa => {
+    // Filtro por termo de busca
+    const matchesSearch = despesa.item.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      despesa.fornecedor.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      despesa.notaFiscal.toLowerCase().includes(searchTerm.toLowerCase());
+
+    // Filtro por status
+    const matchesStatus = !filters.status || despesa.status === filters.status;
+
+    // Filtro por forma de pagamento
+    const matchesFormaPagamento = !filters.formaPagamento || 
+      despesa.formaPagamento === filters.formaPagamento;
+
+    // Filtro por data
+    let matchesDateRange = true;
+    if (filters.dataInicio && filters.dataFim) {
+      const despesaDate = new Date(despesa.data);
+      const startDate = new Date(filters.dataInicio);
+      const endDate = new Date(filters.dataFim);
+      matchesDateRange = despesaDate >= startDate && despesaDate <= endDate;
+    }
+
+    return matchesSearch && matchesStatus && matchesFormaPagamento && matchesDateRange;
+  });
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -100,15 +145,41 @@ export function DespesasTable({ searchTerm }: DespesasTableProps) {
                   <td className="p-4 text-sm">{despesa.formaPagamento}</td>
                   <td className="p-4">
                     <div className="flex items-center justify-end gap-2">
-                      <Button variant="ghost" size="sm">
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => onViewDetails(despesa)}
+                      >
                         <Eye className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="sm">
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => onEditDespesa(despesa)}
+                      >
                         <Edit className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="sm" className="text-e2l-danger hover:text-e2l-danger">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="ghost" size="sm" className="text-e2l-danger hover:text-e2l-danger">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Tem certeza que deseja excluir esta despesa? Esta ação não pode ser desfeita.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => onDeleteDespesa(despesa)}>
+                              Excluir
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </div>
                   </td>
                 </tr>
