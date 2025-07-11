@@ -23,7 +23,7 @@ export function useReceitaForm(receita?: any) {
     item: receita?.item || "",
     cliente: receita?.cliente || "",
     status: receita?.status || "pendente",
-    formaPagamento: receita?.formaPagamento || "",
+    formaPagamento: receita?.formaPagamento || "Pix", // Changed from empty string to default value
     observacoes: receita?.observacoes || "",
     quantidadeParcelas: receita?.quantidadeParcelas || "1",
     valorParcela: receita?.valorParcela || ""

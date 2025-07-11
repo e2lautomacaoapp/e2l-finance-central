@@ -17,8 +17,8 @@ const Receitas = () => {
   const [selectedReceita, setSelectedReceita] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filters, setFilters] = useState({
-    status: "",
-    formaPagamento: "",
+    status: undefined, // Changed from empty string to undefined
+    formaPagamento: undefined, // Changed from empty string to undefined
     dataInicio: "",
     dataFim: ""
   });
@@ -51,7 +51,15 @@ const Receitas = () => {
   };
 
   const handleApplyFilters = (newFilters: any) => {
-    setFilters(newFilters);
+    // Convert "all" values to undefined for proper filtering
+    const processedFilters = {
+      status: newFilters.status === "all" ? undefined : newFilters.status,
+      formaPagamento: newFilters.formaPagamento === "all" ? undefined : newFilters.formaPagamento,
+      dataInicio: newFilters.dataInicio || "",
+      dataFim: newFilters.dataFim || ""
+    };
+    
+    setFilters(processedFilters);
     setIsFiltersModalOpen(false);
     toast.success("Filtros aplicados!");
   };
