@@ -4,9 +4,28 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Edit, Trash2, Eye } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface ComprasTableProps {
   searchTerm: string;
+  filters: {
+    status: string | undefined;
+    dataInicio: string;
+    dataFim: string;
+  };
+  onViewDetails: (compra: any) => void;
+  onEdit: (compra: any) => void;
+  onDelete: (compraId: number) => void;
 }
 
 const mockCompras = [
@@ -39,14 +58,22 @@ const mockCompras = [
   }
 ];
 
-export function ComprasTable({ searchTerm }: ComprasTableProps) {
+export function ComprasTable({ searchTerm, filters, onViewDetails, onEdit, onDelete }: ComprasTableProps) {
   const [compras] = useState(mockCompras);
 
-  const filteredCompras = compras.filter(compra =>
-    compra.cliente.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    compra.itens_materiais.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    compra.solicitante.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredCompras = compras.filter(compra => {
+    const matchesSearch = compra.cliente.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      compra.itens_materiais.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      compra.solicitante.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesStatus = !filters.status || filters.status === "all" || compra.status === filters.status;
+
+    const compraDate = new Date(compra.data);
+    const matchesDateRange = (!filters.dataInicio || compraDate >= new Date(filters.dataInicio)) &&
+      (!filters.dataFim || compraDate <= new Date(filters.dataFim));
+
+    return matchesSearch && matchesStatus && matchesDateRange;
+  });
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -94,15 +121,44 @@ export function ComprasTable({ searchTerm }: ComprasTableProps) {
                   <td className="p-4">{getStatusBadge(compra.status)}</td>
                   <td className="p-4">
                     <div className="flex items-center justify-end gap-2">
-                      <Button variant="ghost" size="sm">
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => onViewDetails(compra)}
+                      >
                         <Eye className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="sm">
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => onEdit(compra)}
+                      >
                         <Edit className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="sm" className="text-e2l-danger hover:text-e2l-danger">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="ghost" size="sm" className="text-e2l-danger hover:text-e2l-danger">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Tem certeza que deseja excluir esta compra? Esta ação não pode ser desfeita.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => onDelete(compra.id)}
+                              className="bg-e2l-danger hover:bg-e2l-danger/90"
+                            >
+                              Excluir
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </div>
                   </td>
                 </tr>
