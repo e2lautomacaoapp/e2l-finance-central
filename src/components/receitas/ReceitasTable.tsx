@@ -7,6 +7,14 @@ import { Edit, Trash2, Eye } from "lucide-react";
 
 interface ReceitasTableProps {
   searchTerm: string;
+  filters: {
+    status: string;
+    formaPagamento: string;
+    dataInicio: string;
+    dataFim: string;
+  };
+  onViewDetails: (receita: any) => void;
+  onEditReceita: (receita: any) => void;
 }
 
 const mockReceitas = [
@@ -45,14 +53,22 @@ const mockReceitas = [
   }
 ];
 
-export function ReceitasTable({ searchTerm }: ReceitasTableProps) {
+export function ReceitasTable({ searchTerm, filters, onViewDetails, onEditReceita }: ReceitasTableProps) {
   const [receitas] = useState(mockReceitas);
 
-  const filteredReceitas = receitas.filter(receita =>
-    receita.item.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    receita.cliente.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    receita.notaFiscal.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredReceitas = receitas.filter(receita => {
+    const matchesSearch = receita.item.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      receita.cliente.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      receita.notaFiscal.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesStatus = !filters.status || receita.status === filters.status;
+    const matchesFormaPagamento = !filters.formaPagamento || receita.formaPagamento === filters.formaPagamento;
+    
+    const matchesDataRange = (!filters.dataInicio || receita.data >= filters.dataInicio) &&
+      (!filters.dataFim || receita.data <= filters.dataFim);
+
+    return matchesSearch && matchesStatus && matchesFormaPagamento && matchesDataRange;
+  });
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -100,13 +116,28 @@ export function ReceitasTable({ searchTerm }: ReceitasTableProps) {
                   <td className="p-4 text-sm">{receita.formaPagamento}</td>
                   <td className="p-4">
                     <div className="flex items-center justify-end gap-2">
-                      <Button variant="ghost" size="sm">
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => onViewDetails(receita)}
+                        title="Ver detalhes"
+                      >
                         <Eye className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="sm">
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => onEditReceita(receita)}
+                        title="Editar"
+                      >
                         <Edit className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="sm" className="text-e2l-danger hover:text-e2l-danger">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="text-e2l-danger hover:text-e2l-danger"
+                        title="Excluir"
+                      >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>

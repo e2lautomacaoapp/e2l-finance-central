@@ -6,10 +6,55 @@ import { Input } from "@/components/ui/input";
 import { Plus, Search, Filter, Download } from "lucide-react";
 import { ReceitasTable } from "@/components/receitas/ReceitasTable";
 import { ReceitaModal } from "@/components/receitas/ReceitaModal";
+import { ReceitaDetailsModal } from "@/components/receitas/ReceitaDetailsModal";
+import { ReceitaFiltersModal } from "@/components/receitas/ReceitaFiltersModal";
+import { toast } from "sonner";
 
 const Receitas = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [isFiltersModalOpen, setIsFiltersModalOpen] = useState(false);
+  const [selectedReceita, setSelectedReceita] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [filters, setFilters] = useState({
+    status: "",
+    formaPagamento: "",
+    dataInicio: "",
+    dataFim: ""
+  });
+
+  const handleViewDetails = (receita: any) => {
+    setSelectedReceita(receita);
+    setIsDetailsModalOpen(true);
+  };
+
+  const handleEditReceita = (receita: any) => {
+    setSelectedReceita(receita);
+    setIsModalOpen(true);
+  };
+
+  const handleExportReceitas = () => {
+    // Implementar exportação CSV
+    const headers = ["Data", "NF", "Item/Serviço", "Cliente", "Valor", "Status", "Pagamento"];
+    const csvContent = "data:text/csv;charset=utf-8," 
+      + headers.join(",") + "\n";
+    
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "receitas.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    toast.success("Receitas exportadas com sucesso!");
+  };
+
+  const handleApplyFilters = (newFilters: any) => {
+    setFilters(newFilters);
+    setIsFiltersModalOpen(false);
+    toast.success("Filtros aplicados!");
+  };
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -44,12 +89,20 @@ const Receitas = () => {
             </div>
             
             <div className="flex gap-2">
-              <Button variant="outline" size="sm">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setIsFiltersModalOpen(true)}
+              >
                 <Filter className="h-4 w-4 mr-2" />
                 Filtros
               </Button>
               
-              <Button variant="outline" size="sm">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={handleExportReceitas}
+              >
                 <Download className="h-4 w-4 mr-2" />
                 Exportar
               </Button>
@@ -59,12 +112,39 @@ const Receitas = () => {
       </Card>
 
       {/* Receitas Table */}
-      <ReceitasTable searchTerm={searchTerm} />
+      <ReceitasTable 
+        searchTerm={searchTerm}
+        filters={filters}
+        onViewDetails={handleViewDetails}
+        onEditReceita={handleEditReceita}
+      />
 
-      {/* Modal */}
+      {/* Modal para Nova/Editar Receita */}
       <ReceitaModal 
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => {
+          setIsModalOpen(false);
+          setSelectedReceita(null);
+        }}
+        receita={selectedReceita}
+      />
+
+      {/* Modal para Ver Detalhes */}
+      <ReceitaDetailsModal
+        isOpen={isDetailsModalOpen}
+        onClose={() => {
+          setIsDetailsModalOpen(false);
+          setSelectedReceita(null);
+        }}
+        receita={selectedReceita}
+      />
+
+      {/* Modal de Filtros */}
+      <ReceitaFiltersModal
+        isOpen={isFiltersModalOpen}
+        onClose={() => setIsFiltersModalOpen(false)}
+        onApplyFilters={handleApplyFilters}
+        currentFilters={filters}
       />
     </div>
   );
