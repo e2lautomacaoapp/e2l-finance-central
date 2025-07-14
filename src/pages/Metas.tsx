@@ -8,6 +8,7 @@ import { MetaModal } from "@/components/metas/MetaModal";
 
 const Metas = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedMeta, setSelectedMeta] = useState<any>(null);
 
   const metas = [
     {
@@ -17,7 +18,9 @@ const Metas = () => {
       valorAtual: 128450,
       periodo: "Janeiro 2024",
       status: "ativa",
-      progresso: 85.6
+      progresso: 85.6,
+      tipo: "receita",
+      descricao: "Meta de receita para o mês de Janeiro de 2024"
     },
     {
       id: 2,
@@ -26,7 +29,9 @@ const Metas = () => {
       valorAtual: 89230,
       periodo: "Q1 2024",
       status: "ativa",
-      progresso: 99.1
+      progresso: 99.1,
+      tipo: "despesa",
+      descricao: "Controle de despesas para o primeiro trimestre"
     },
     {
       id: 3,
@@ -35,7 +40,9 @@ const Metas = () => {
       valorAtual: 620000,
       periodo: "2024",
       status: "ativa",
-      progresso: 34.4
+      progresso: 34.4,
+      tipo: "receita",
+      descricao: "Meta de receita anual para 2024"
     },
     {
       id: 4,
@@ -45,9 +52,20 @@ const Metas = () => {
       periodo: "Q1 2024",
       status: "ativa",
       progresso: 66.7,
-      tipo: "quantidade"
+      tipo: "clientes",
+      descricao: "Meta de captação de novos clientes"
     }
   ];
+
+  const handleEditMeta = (meta: any) => {
+    setSelectedMeta(meta);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedMeta(null);
+  };
 
   const getProgressColor = (progresso: number) => {
     if (progresso >= 90) return "bg-e2l-success";
@@ -162,23 +180,27 @@ const Metas = () => {
 
                 <div className="lg:text-right lg:min-w-[200px]">
                   <div className="text-sm text-gray-600 mb-1">
-                    {meta.tipo === 'quantidade' ? 'Quantidade' : 'Valor Atual'}
+                    {meta.tipo === 'clientes' ? 'Quantidade' : 'Valor Atual'}
                   </div>
                   <div className="text-xl font-bold text-e2l-secondary mb-1">
-                    {meta.tipo === 'quantidade' 
+                    {meta.tipo === 'clientes' 
                       ? `${meta.valorAtual} / ${meta.valorMeta}`
                       : `R$ ${meta.valorAtual.toLocaleString('pt-BR')}`
                     }
                   </div>
                   <div className="text-sm text-gray-500">
-                    {meta.tipo === 'quantidade' 
+                    {meta.tipo === 'clientes' 
                       ? `Meta: ${meta.valorMeta}`
                       : `Meta: R$ ${meta.valorMeta.toLocaleString('pt-BR')}`
                     }
                   </div>
                   
                   <div className="mt-3">
-                    <Button size="sm" variant="outline">
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => handleEditMeta(meta)}
+                    >
                       Editar Meta
                     </Button>
                   </div>
@@ -192,7 +214,8 @@ const Metas = () => {
       {/* Modal */}
       <MetaModal 
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={handleCloseModal}
+        meta={selectedMeta}
       />
     </div>
   );

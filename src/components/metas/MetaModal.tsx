@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,12 +16,32 @@ interface MetaModalProps {
 
 export function MetaModal({ isOpen, onClose, meta }: MetaModalProps) {
   const [formData, setFormData] = useState({
-    titulo: meta?.titulo || "",
-    valor: meta?.valor || "",
-    periodo: meta?.periodo || "",
-    tipo: meta?.tipo || "receita",
-    descricao: meta?.descricao || ""
+    titulo: "",
+    valor: "",
+    periodo: "",
+    tipo: "receita",
+    descricao: ""
   });
+
+  useEffect(() => {
+    if (meta) {
+      setFormData({
+        titulo: meta.titulo || "",
+        valor: meta.valorMeta?.toString() || "",
+        periodo: meta.periodo || "",
+        tipo: meta.tipo || "receita",
+        descricao: meta.descricao || ""
+      });
+    } else {
+      setFormData({
+        titulo: "",
+        valor: "",
+        periodo: "",
+        tipo: "receita",
+        descricao: ""
+      });
+    }
+  }, [meta]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
