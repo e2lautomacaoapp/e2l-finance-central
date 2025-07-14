@@ -6,10 +6,34 @@ import { Input } from "@/components/ui/input";
 import { Plus, Search, Filter, Download } from "lucide-react";
 import { ClientesTable } from "@/components/clientes/ClientesTable";
 import { ClienteModal } from "@/components/clientes/ClienteModal";
+import { ClienteFiltersModal } from "@/components/clientes/ClienteFiltersModal";
+import { toast } from "sonner";
 
 const Clientes = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [filters, setFilters] = useState({
+    tipo: undefined as string | undefined,
+  });
+
+  const handleExport = () => {
+    // Simular exportação CSV
+    const csvContent = "Nome,CNPJ/CPF,Email,Telefone,Endereço\n";
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'clientes.csv';
+    a.click();
+    window.URL.revokeObjectURL(url);
+    toast.success("Dados exportados com sucesso!");
+  };
+
+  const handleApplyFilters = (newFilters: typeof filters) => {
+    setFilters(newFilters);
+    setIsFiltersOpen(false);
+  };
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -44,12 +68,20 @@ const Clientes = () => {
             </div>
             
             <div className="flex gap-2">
-              <Button variant="outline" size="sm">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setIsFiltersOpen(true)}
+              >
                 <Filter className="h-4 w-4 mr-2" />
                 Filtros
               </Button>
               
-              <Button variant="outline" size="sm">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={handleExport}
+              >
                 <Download className="h-4 w-4 mr-2" />
                 Exportar
               </Button>
@@ -59,12 +91,23 @@ const Clientes = () => {
       </Card>
 
       {/* Clientes Table */}
-      <ClientesTable searchTerm={searchTerm} />
+      <ClientesTable 
+        searchTerm={searchTerm} 
+        filters={filters}
+      />
 
       {/* Modal */}
       <ClienteModal 
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
+      />
+
+      {/* Filters Modal */}
+      <ClienteFiltersModal
+        isOpen={isFiltersOpen}
+        onClose={() => setIsFiltersOpen(false)}
+        onApplyFilters={handleApplyFilters}
+        currentFilters={filters}
       />
     </div>
   );
