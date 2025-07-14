@@ -17,39 +17,196 @@ const Relatorios = () => {
     status: ""
   });
 
+  const [isGenerating, setIsGenerating] = useState<string | null>(null);
+
   const handleExportar = (formato: 'pdf' | 'csv' | 'xlsx') => {
-    // Aqui você integraria com biblioteca de exportação
+    // Validar se os filtros obrigatórios estão preenchidos
+    if (!filtros.tipo) {
+      toast.error("Selecione o tipo de relatório para exportar");
+      return;
+    }
+
+    if (!filtros.dataInicio || !filtros.dataFim) {
+      toast.error("Selecione o período para exportar o relatório");
+      return;
+    }
+
+    // Simular processo de exportação
     console.log('Exportando relatório:', { filtros, formato });
+    
+    // Simular dados baseados no tipo de relatório
+    const dadosSimulados = gerarDadosSimulados(filtros.tipo);
+    
+    if (formato === 'csv') {
+      exportarCSV(dadosSimulados, filtros.tipo);
+    } else if (formato === 'xlsx') {
+      exportarExcel(dadosSimulados, filtros.tipo);
+    } else {
+      exportarPDF(dadosSimulados, filtros.tipo);
+    }
+    
     toast.success(`Relatório ${formato.toUpperCase()} gerado com sucesso!`);
+  };
+
+  const gerarDadosSimulados = (tipo: string) => {
+    const dados: any = {
+      periodo: `${filtros.dataInicio} a ${filtros.dataFim}`,
+      tipo: tipo
+    };
+
+    switch (tipo) {
+      case 'receitas':
+        dados.itens = [
+          { data: '01/01/2024', cliente: 'Cliente A', valor: 5000, categoria: 'Vendas' },
+          { data: '15/01/2024', cliente: 'Cliente B', valor: 3200, categoria: 'Serviços' },
+          { data: '30/01/2024', cliente: 'Cliente C', valor: 8500, categoria: 'Consultoria' }
+        ];
+        dados.total = 16700;
+        break;
+      case 'despesas':
+        dados.itens = [
+          { data: '05/01/2024', fornecedor: 'Fornecedor X', valor: 2500, categoria: 'Material' },
+          { data: '12/01/2024', fornecedor: 'Fornecedor Y', valor: 1800, categoria: 'Serviços' },
+          { data: '25/01/2024', fornecedor: 'Fornecedor Z', valor: 3200, categoria: 'Equipamentos' }
+        ];
+        dados.total = 7500;
+        break;
+      case 'fluxo-caixa':
+        dados.entradas = 16700;
+        dados.saidas = 7500;
+        dados.saldo = 9200;
+        break;
+      case 'clientes':
+        dados.itens = [
+          { cliente: 'Cliente A', totalReceitas: 15000, numeroTransacoes: 5 },
+          { cliente: 'Cliente B', totalReceitas: 8200, numeroTransacoes: 3 },
+          { cliente: 'Cliente C', totalReceitas: 12500, numeroTransacoes: 4 }
+        ];
+        break;
+      case 'metas':
+        dados.itens = [
+          { meta: 'Receita Mensal', valorMeta: 150000, valorAtual: 128450, progresso: 85.6 },
+          { meta: 'Controle Despesas', valorMeta: 90000, valorAtual: 89230, progresso: 99.1 },
+          { meta: 'Receita Anual', valorMeta: 1800000, valorAtual: 620000, progresso: 34.4 }
+        ];
+        break;
+      default:
+        dados.itens = [];
+    }
+
+    return dados;
+  };
+
+  const exportarCSV = (dados: any, tipo: string) => {
+    let csvContent = '';
+    
+    switch (tipo) {
+      case 'receitas':
+        csvContent = 'Data,Cliente,Valor,Categoria\n';
+        dados.itens.forEach((item: any) => {
+          csvContent += `${item.data},${item.cliente},${item.valor},${item.categoria}\n`;
+        });
+        break;
+      case 'despesas':
+        csvContent = 'Data,Fornecedor,Valor,Categoria\n';
+        dados.itens.forEach((item: any) => {
+          csvContent += `${item.data},${item.fornecedor},${item.valor},${item.categoria}\n`;
+        });
+        break;
+      case 'clientes':
+        csvContent = 'Cliente,Total Receitas,Número Transações\n';
+        dados.itens.forEach((item: any) => {
+          csvContent += `${item.cliente},${item.totalReceitas},${item.numeroTransacoes}\n`;
+        });
+        break;
+      default:
+        csvContent = 'Relatório,Dados\n';
+    }
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `relatorio-${tipo}-${Date.now()}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
+  const exportarExcel = (dados: any, tipo: string) => {
+    // Simular exportação Excel
+    console.log('Exportando Excel:', dados);
+    toast.info("Funcionalidade Excel em desenvolvimento. Use CSV por enquanto.");
+  };
+
+  const exportarPDF = (dados: any, tipo: string) => {
+    // Simular exportação PDF
+    console.log('Exportando PDF:', dados);
+    toast.info("Funcionalidade PDF em desenvolvimento. Use CSV por enquanto.");
+  };
+
+  const handleGerarRelatorio = async (tipoRelatorio: string) => {
+    setIsGenerating(tipoRelatorio);
+    
+    try {
+      // Simular geração de relatório
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      const dados = gerarDadosSimulados(tipoRelatorio);
+      console.log(`Relatório ${tipoRelatorio} gerado:`, dados);
+      
+      toast.success(`Relatório "${getTituloRelatorio(tipoRelatorio)}" gerado com sucesso!`);
+    } catch (error) {
+      toast.error("Erro ao gerar relatório. Tente novamente.");
+    } finally {
+      setIsGenerating(null);
+    }
+  };
+
+  const getTituloRelatorio = (tipo: string) => {
+    const titulos: { [key: string]: string } = {
+      'receitas-periodo': 'Receitas por Período',
+      'despesas-categoria': 'Despesas por Categoria',
+      'fluxo-caixa': 'Fluxo de Caixa',
+      'clientes-receitas': 'Clientes e Receitas',
+      'metas-realizado': 'Metas vs Realizado',
+      'contas-receber': 'Contas a Receber'
+    };
+    return titulos[tipo] || tipo;
   };
 
   const relatoriosDisponiveis = [
     {
+      id: 'receitas-periodo',
       title: "Receitas por Período",
       description: "Relatório detalhado de todas as receitas em um período específico",
       icon: "📈"
     },
     {
+      id: 'despesas-categoria',
       title: "Despesas por Categoria",
       description: "Análise de despesas organizadas por categoria ou fornecedor",
       icon: "📊"
     },
     {
+      id: 'fluxo-caixa',
       title: "Fluxo de Caixa",
       description: "Visão completa de entradas e saídas por período",
       icon: "💰"
     },
     {
+      id: 'clientes-receitas',
       title: "Clientes e Receitas",
       description: "Relatório de receitas agrupadas por cliente",
       icon: "👥"
     },
     {
+      id: 'metas-realizado',
       title: "Metas vs Realizado",
       description: "Comparativo entre metas estabelecidas e valores realizados",
       icon: "🎯"
     },
     {
+      id: 'contas-receber',
       title: "Contas a Receber",
       description: "Relatório de receitas pendentes e vencimentos",
       icon: "⏰"
@@ -116,6 +273,7 @@ const Relatorios = () => {
               <Button 
                 onClick={() => handleExportar('pdf')}
                 className="btn-primary"
+                disabled={!filtros.tipo || !filtros.dataInicio || !filtros.dataFim}
               >
                 <Download className="h-4 w-4 mr-2" />
                 Exportar PDF
@@ -124,6 +282,7 @@ const Relatorios = () => {
               <Button 
                 onClick={() => handleExportar('csv')}
                 variant="outline"
+                disabled={!filtros.tipo || !filtros.dataInicio || !filtros.dataFim}
               >
                 <Download className="h-4 w-4 mr-2" />
                 Exportar CSV
@@ -132,6 +291,7 @@ const Relatorios = () => {
               <Button 
                 onClick={() => handleExportar('xlsx')}
                 variant="outline"
+                disabled={!filtros.tipo || !filtros.dataInicio || !filtros.dataFim}
               >
                 <Download className="h-4 w-4 mr-2" />
                 Exportar Excel
@@ -143,17 +303,32 @@ const Relatorios = () => {
 
       {/* Relatórios Disponíveis */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {relatoriosDisponiveis.map((relatorio, index) => (
-          <Card key={index} className="card-elevated hover:shadow-lg transition-all duration-200 cursor-pointer">
+        {relatoriosDisponiveis.map((relatorio) => (
+          <Card key={relatorio.id} className="card-elevated hover:shadow-lg transition-all duration-200">
             <CardContent className="p-6">
               <div className="flex items-start gap-4">
                 <div className="text-3xl">{relatorio.icon}</div>
                 <div className="flex-1">
                   <h3 className="font-semibold text-e2l-primary mb-2">{relatorio.title}</h3>
                   <p className="text-sm text-gray-600 mb-4">{relatorio.description}</p>
-                  <Button size="sm" variant="outline" className="w-full">
-                    <FileText className="h-4 w-4 mr-2" />
-                    Gerar Relatório
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="w-full"
+                    onClick={() => handleGerarRelatorio(relatorio.id)}
+                    disabled={isGenerating === relatorio.id}
+                  >
+                    {isGenerating === relatorio.id ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
+                        Gerando...
+                      </>
+                    ) : (
+                      <>
+                        <FileText className="h-4 w-4 mr-2" />
+                        Gerar Relatório
+                      </>
+                    )}
                   </Button>
                 </div>
               </div>
