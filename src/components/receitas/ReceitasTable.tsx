@@ -4,6 +4,18 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Edit, Trash2, Eye } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
 
 interface ReceitasTableProps {
   searchTerm: string;
@@ -54,7 +66,7 @@ const mockReceitas = [
 ];
 
 export function ReceitasTable({ searchTerm, filters, onViewDetails, onEditReceita }: ReceitasTableProps) {
-  const [receitas] = useState(mockReceitas);
+  const [receitas, setReceitas] = useState(mockReceitas);
 
   const filteredReceitas = receitas.filter(receita => {
     const matchesSearch = receita.item.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -69,6 +81,11 @@ export function ReceitasTable({ searchTerm, filters, onViewDetails, onEditReceit
 
     return matchesSearch && matchesStatus && matchesFormaPagamento && matchesDataRange;
   });
+
+  const handleDeleteReceita = (receitaId: number) => {
+    setReceitas(receitas.filter(receita => receita.id !== receitaId));
+    toast.success("Receita excluída com sucesso!");
+  };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -132,14 +149,36 @@ export function ReceitasTable({ searchTerm, filters, onViewDetails, onEditReceit
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="text-e2l-danger hover:text-e2l-danger"
-                        title="Excluir"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="text-e2l-danger hover:text-e2l-danger"
+                            title="Excluir"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Tem certeza que deseja excluir a receita "{receita.item}"? 
+                              Esta ação não pode ser desfeita.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                            <AlertDialogAction 
+                              onClick={() => handleDeleteReceita(receita.id)}
+                              className="bg-e2l-danger hover:bg-e2l-danger/90"
+                            >
+                              Excluir
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </div>
                   </td>
                 </tr>
