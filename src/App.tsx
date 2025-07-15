@@ -18,6 +18,8 @@ import Relatorios from "./pages/Relatorios";
 import Metas from "./pages/Metas";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
+import Usuarios from "./pages/configuracoes/Usuarios";
+import Perfil from "./pages/configuracoes/Perfil";
 
 const queryClient = new QueryClient();
 
@@ -43,6 +45,8 @@ const App = () => (
                       <Route path="/fornecedores" element={<Fornecedores />} />
                       <Route path="/relatorios" element={<Relatorios />} />
                       <Route path="/metas" element={<Metas />} />
+                      <Route path="/configuracoes/usuarios" element={<Usuarios />} />
+                      <Route path="/configuracoes/perfil" element={<Perfil />} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>
                   </AppLayout>

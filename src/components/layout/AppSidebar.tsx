@@ -7,7 +7,9 @@ import {
   Users, 
   Building2, 
   FileText, 
-  Target 
+  Target,
+  Settings,
+  UserCog
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import {
@@ -21,8 +23,9 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { usePermissions } from "@/hooks/usePermissions";
 
-const menuItems = [
+const mainMenuItems = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
   { title: "Receitas", url: "/receitas", icon: TrendingUp },
   { title: "Despesas", url: "/despesas", icon: TrendingDown },
@@ -33,9 +36,15 @@ const menuItems = [
   { title: "Metas", url: "/metas", icon: Target },
 ];
 
+const configMenuItems = [
+  { title: "Usuários", url: "/configuracoes/usuarios", icon: Users },
+  { title: "Meu Perfil", url: "/configuracoes/perfil", icon: UserCog },
+];
+
 export function AppSidebar() {
   const { state } = useSidebar();
   const location = useLocation();
+  const { isAdmin, loading } = usePermissions();
   const currentPath = location.pathname;
   const collapsed = state === "collapsed";
 
@@ -46,6 +55,20 @@ export function AppSidebar() {
         ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium" 
         : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
     }`;
+
+  if (loading) {
+    return (
+      <Sidebar className={`${collapsed ? "w-16" : "w-64"} border-r border-sidebar-border`}>
+        <SidebarContent className="bg-sidebar">
+          <div className="p-4 border-b border-sidebar-border">
+            <div className="flex items-center justify-center">
+              <div className="h-8 w-8 bg-e2l-secondary rounded-lg animate-pulse"></div>
+            </div>
+          </div>
+        </SidebarContent>
+      </Sidebar>
+    );
+  }
 
   return (
     <Sidebar className={`${collapsed ? "w-16" : "w-64"} border-r border-sidebar-border`}>
@@ -68,6 +91,7 @@ export function AppSidebar() {
           )}
         </div>
 
+        {/* Menu Principal */}
         <SidebarGroup>
           <SidebarGroupLabel className="text-sidebar-foreground/70 text-xs font-medium uppercase tracking-wider px-4 py-2">
             {!collapsed && "Menu Principal"}
@@ -75,7 +99,7 @@ export function AppSidebar() {
           
           <SidebarGroupContent>
             <SidebarMenu>
-              {menuItems.map((item) => (
+              {mainMenuItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
                     <NavLink 
@@ -92,6 +116,33 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {/* Menu Configurações - Apenas para Admins */}
+        {isAdmin() && (
+          <SidebarGroup>
+            <SidebarGroupLabel className="text-sidebar-foreground/70 text-xs font-medium uppercase tracking-wider px-4 py-2">
+              {!collapsed && "Configurações"}
+            </SidebarGroupLabel>
+            
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {configMenuItems.map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild>
+                      <NavLink 
+                        to={item.url} 
+                        className={getNavCls}
+                      >
+                        <item.icon className="h-5 w-5 shrink-0" />
+                        {!collapsed && <span>{item.title}</span>}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
       </SidebarContent>
     </Sidebar>
   );

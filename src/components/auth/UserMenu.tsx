@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePermissions } from '@/hooks/usePermissions';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -11,12 +12,16 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { LogOut, User } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { LogOut, User, Settings } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 
 const UserMenu = () => {
   const { user, signOut } = useAuth();
+  const { userRole, isAdmin } = usePermissions();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handleSignOut = async () => {
     try {
@@ -34,10 +39,22 @@ const UserMenu = () => {
     }
   };
 
+  const handleProfileClick = () => {
+    navigate('/configuracoes/perfil');
+  };
+
+  const handleSettingsClick = () => {
+    navigate('/configuracoes/usuarios');
+  };
+
   if (!user) return null;
 
   const getInitials = (email: string) => {
     return email.substring(0, 2).toUpperCase();
+  };
+
+  const getRoleBadgeColor = (role: string) => {
+    return role === 'admin' ? 'bg-e2l-primary text-white' : 'bg-gray-100 text-gray-800';
   };
 
   return (
@@ -53,20 +70,33 @@ const UserMenu = () => {
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
-          <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">
-              {user.user_metadata?.full_name || 'Usuário'}
-            </p>
-            <p className="text-xs leading-none text-muted-foreground">
-              {user.email}
-            </p>
+          <div className="flex flex-col space-y-2">
+            <div className="flex flex-col space-y-1">
+              <p className="text-sm font-medium leading-none">
+                {user.user_metadata?.full_name || 'Usuário'}
+              </p>
+              <p className="text-xs leading-none text-muted-foreground">
+                {user.email}
+              </p>
+            </div>
+            {userRole && (
+              <Badge variant="secondary" className={getRoleBadgeColor(userRole)}>
+                {userRole === 'admin' ? 'Administrador' : 'Usuário'}
+              </Badge>
+            )}
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>
+        <DropdownMenuItem onClick={handleProfileClick}>
           <User className="mr-2 h-4 w-4" />
-          <span>Perfil</span>
+          <span>Meu Perfil</span>
         </DropdownMenuItem>
+        {isAdmin() && (
+          <DropdownMenuItem onClick={handleSettingsClick}>
+            <Settings className="mr-2 h-4 w-4" />
+            <span>Configurações</span>
+          </DropdownMenuItem>
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleSignOut}>
           <LogOut className="mr-2 h-4 w-4" />

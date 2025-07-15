@@ -24,15 +24,32 @@ export function AppLayout({ children }: AppLayoutProps) {
     const routes: Record<string, string> = {
       "/": "Dashboard",
       "/receitas": "Receitas",
-      "/despesas": "Despesas",
+      "/despesas": "Despesas", 
       "/compras": "Compras",
       "/clientes": "Clientes",
       "/fornecedores": "Fornecedores",
       "/relatorios": "Relatórios",
       "/metas": "Metas",
+      "/configuracoes/usuarios": "Usuários",
+      "/configuracoes/perfil": "Meu Perfil",
     };
     return routes[pathname] || "Página";
   };
+
+  const getBreadcrumbs = (pathname: string) => {
+    if (pathname.startsWith('/configuracoes/')) {
+      return {
+        section: "Configurações",
+        page: getPageTitle(pathname)
+      };
+    }
+    return {
+      section: "E2L Automação",
+      page: getPageTitle(pathname)
+    };
+  };
+
+  const breadcrumbs = getBreadcrumbs(location.pathname);
 
   return (
     <>
@@ -45,12 +62,12 @@ export function AppLayout({ children }: AppLayoutProps) {
             <BreadcrumbList>
               <BreadcrumbItem className="hidden md:block">
                 <BreadcrumbLink href="/">
-                  E2L Automação
+                  {breadcrumbs.section}
                 </BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator className="hidden md:block" />
               <BreadcrumbItem>
-                <BreadcrumbPage>{getPageTitle(location.pathname)}</BreadcrumbPage>
+                <BreadcrumbPage>{breadcrumbs.page}</BreadcrumbPage>
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
