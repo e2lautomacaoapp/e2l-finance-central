@@ -1,12 +1,21 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Download, FileText, Calendar, Filter } from "lucide-react";
+import { Download, FileText, Calendar, Filter, Trash2, History } from "lucide-react";
 import { toast } from "sonner";
+import RelatorioVisualizacao from "@/components/relatorios/RelatorioVisualizacao";
+
+interface RelatorioGerado {
+  id: string;
+  titulo: string;
+  tipo: string;
+  dados: any;
+  dataGeracao: string;
+  periodo: string;
+}
 
 const Relatorios = () => {
   const [filtros, setFiltros] = useState({
@@ -18,6 +27,7 @@ const Relatorios = () => {
   });
 
   const [isGenerating, setIsGenerating] = useState<string | null>(null);
+  const [relatoriosGerados, setRelatoriosGerados] = useState<RelatorioGerado[]>([]);
 
   const handleExportar = (formato: 'pdf' | 'csv' | 'xlsx') => {
     // Validar se os filtros obrigatórios estão preenchidos
@@ -151,8 +161,19 @@ const Relatorios = () => {
       // Simular geração de relatório
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      const dados = gerarDadosSimulados(tipoRelatorio);
-      console.log(`Relatório ${tipoRelatorio} gerado:`, dados);
+      // Expandir dados simulados baseado no tipo
+      const dadosExpandidos = gerarDadosExpandidos(tipoRelatorio);
+      
+      const novoRelatorio: RelatorioGerado = {
+        id: Date.now().toString(),
+        titulo: getTituloRelatorio(tipoRelatorio),
+        tipo: tipoRelatorio,
+        dados: dadosExpandidos,
+        dataGeracao: new Date().toLocaleString('pt-BR'),
+        periodo: 'Janeiro 2024' // Seria dinâmico baseado nos filtros
+      };
+      
+      setRelatoriosGerados(prev => [novoRelatorio, ...prev]);
       
       toast.success(`Relatório "${getTituloRelatorio(tipoRelatorio)}" gerado com sucesso!`);
     } catch (error) {
@@ -160,6 +181,72 @@ const Relatorios = () => {
     } finally {
       setIsGenerating(null);
     }
+  };
+
+  const gerarDadosExpandidos = (tipo: string) => {
+    const dados: any = {
+      periodo: 'Janeiro 2024',
+      tipo: tipo
+    };
+
+    switch (tipo) {
+      case 'receitas-periodo':
+        dados.itens = [
+          { data: '05/01/2024', cliente: 'Tech Solutions Ltda', valor: 15000, categoria: 'Consultoria' },
+          { data: '12/01/2024', cliente: 'Indústria ABC', valor: 8500, categoria: 'Vendas' },
+          { data: '18/01/2024', cliente: 'Varejo XYZ', valor: 12300, categoria: 'Serviços' },
+          { data: '25/01/2024', cliente: 'Startup Innovation', valor: 6700, categoria: 'Consultoria' },
+          { data: '30/01/2024', cliente: 'Corporate Solutions', valor: 22000, categoria: 'Vendas' }
+        ];
+        dados.total = dados.itens.reduce((sum: number, item: any) => sum + item.valor, 0);
+        break;
+      case 'despesas-categoria':
+        dados.itens = [
+          { data: '03/01/2024', fornecedor: 'Office Supplies Co', valor: 3500, categoria: 'Material de Escritório' },
+          { data: '08/01/2024', fornecedor: 'Tech Equipment Ltd', valor: 15000, categoria: 'Equipamentos' },
+          { data: '15/01/2024', fornecedor: 'Marketing Agency', valor: 8000, categoria: 'Marketing' },
+          { data: '22/01/2024', fornecedor: 'Legal Services', valor: 5500, categoria: 'Jurídico' },
+          { data: '28/01/2024', fornecedor: 'Utilities Company', valor: 2800, categoria: 'Utilidades' }
+        ];
+        dados.total = dados.itens.reduce((sum: number, item: any) => sum + item.valor, 0);
+        break;
+      case 'fluxo-caixa':
+        dados.entradas = 64500;
+        dados.saidas = 34800;
+        dados.saldo = 29700;
+        break;
+      case 'clientes-receitas':
+        dados.itens = [
+          { cliente: 'Tech Solutions Ltda', totalReceitas: 45000, numeroTransacoes: 8 },
+          { cliente: 'Indústria ABC', totalReceitas: 32000, numeroTransacoes: 6 },
+          { cliente: 'Varejo XYZ', totalReceitas: 28500, numeroTransacoes: 7 },
+          { cliente: 'Startup Innovation', totalReceitas: 18700, numeroTransacoes: 4 },
+          { cliente: 'Corporate Solutions', totalReceitas: 52000, numeroTransacoes: 9 }
+        ];
+        break;
+      case 'metas-realizado':
+        dados.itens = [
+          { meta: 'Receita Mensal', valorMeta: 200000, valorAtual: 176300, progresso: 88.15 },
+          { meta: 'Controle de Despesas', valorMeta: 120000, valorAtual: 98500, progresso: 82.08 },
+          { meta: 'Novos Clientes', valorMeta: 15, valorAtual: 12, progresso: 80.0 },
+          { meta: 'Margem de Lucro (%)', valorMeta: 30, valorAtual: 25.5, progresso: 85.0 }
+        ];
+        break;
+      case 'contas-receber':
+        dados.itens = [
+          { cliente: 'Tech Solutions Ltda', vencimento: '15/02/2024', status: 'Em dia', valor: 12000 },
+          { cliente: 'Indústria ABC', vencimento: '10/02/2024', status: 'Vencido', valor: 8500 },
+          { cliente: 'Varejo XYZ', vencimento: '20/02/2024', status: 'A vencer', valor: 15000 },
+          { cliente: 'Startup Innovation', vencimento: '05/02/2024', status: 'Vencido', valor: 6700 },
+          { cliente: 'Corporate Solutions', vencimento: '25/02/2024', status: 'Em dia', valor: 18000 }
+        ];
+        dados.total = dados.itens.reduce((sum: number, item: any) => sum + item.valor, 0);
+        break;
+      default:
+        dados.itens = [];
+    }
+
+    return dados;
   };
 
   const getTituloRelatorio = (tipo: string) => {
@@ -172,6 +259,16 @@ const Relatorios = () => {
       'contas-receber': 'Contas a Receber'
     };
     return titulos[tipo] || tipo;
+  };
+
+  const removerRelatorio = (id: string) => {
+    setRelatoriosGerados(prev => prev.filter(rel => rel.id !== id));
+    toast.success("Relatório removido com sucesso!");
+  };
+
+  const limparHistorico = () => {
+    setRelatoriosGerados([]);
+    toast.success("Histórico de relatórios limpo!");
   };
 
   const relatoriosDisponiveis = [
@@ -336,6 +433,54 @@ const Relatorios = () => {
           </Card>
         ))}
       </div>
+
+      {/* Relatórios Gerados */}
+      {relatoriosGerados.length > 0 && (
+        <Card className="card-elevated">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <History className="h-5 w-5" />
+                Relatórios Gerados
+              </CardTitle>
+              <Button 
+                onClick={limparHistorico} 
+                variant="outline" 
+                size="sm"
+                className="text-e2l-danger hover:bg-red-50"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Limpar Histórico
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {relatoriosGerados.map((relatorio) => (
+                <div key={relatorio.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                  <div className="flex-1">
+                    <h4 className="font-medium text-e2l-primary">{relatorio.titulo}</h4>
+                    <p className="text-sm text-gray-600">
+                      {relatorio.periodo} • Gerado em {relatorio.dataGeracao}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <RelatorioVisualizacao relatorio={relatorio} />
+                    <Button 
+                      onClick={() => removerRelatorio(relatorio.id)}
+                      variant="outline" 
+                      size="sm"
+                      className="text-e2l-danger hover:bg-red-50"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Estatísticas Rápidas */}
       <Card className="card-elevated">
