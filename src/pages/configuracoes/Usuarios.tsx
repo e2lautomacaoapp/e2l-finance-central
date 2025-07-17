@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -42,7 +41,7 @@ const Usuarios = () => {
       const usersWithRoles = await Promise.all(
         (profilesData || []).map(async (profile) => {
           try {
-            const { data: roleData } = await supabase.rpc('get_user_role' as any, {
+            const { data: roleData } = await (supabase as any).rpc('get_user_role', {
               _user_id: profile.id
             });
 
