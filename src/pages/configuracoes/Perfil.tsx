@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -49,7 +50,7 @@ const Perfil = () => {
       setProfileData({
         full_name: data.full_name || '',
         email: data.email || user.email || '',
-        phone: data.phone || '' // Now phone exists in the type
+        phone: (data as any).phone || '' // Type assertion to handle missing type
       });
     } catch (error) {
       console.error('Error fetching profile:', error);

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -47,10 +48,10 @@ const Usuarios = () => {
         return {
           ...profile,
           role: userRole?.role || 'user',
-          status: profile.status || 'active', // Provide default status
+          status: (profile as any).status || 'active', // Type assertion for missing type
           email: profile.email || '', // Ensure email is not null
           full_name: profile.full_name || '', // Ensure full_name is not null
-          phone: profile.phone || undefined
+          phone: (profile as any).phone || undefined // Type assertion for missing type
         };
       }) || [];
 
