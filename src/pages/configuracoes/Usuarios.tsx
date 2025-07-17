@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -47,7 +46,11 @@ const Usuarios = () => {
         const userRole = rolesData?.find((role: any) => role.user_id === profile.id);
         return {
           ...profile,
-          role: userRole?.role || 'user'
+          role: userRole?.role || 'user',
+          status: profile.status || 'active', // Provide default status
+          email: profile.email || '', // Ensure email is not null
+          full_name: profile.full_name || '', // Ensure full_name is not null
+          phone: profile.phone || undefined
         };
       }) || [];
 
