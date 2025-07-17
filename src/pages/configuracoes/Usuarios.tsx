@@ -31,25 +31,38 @@ const Usuarios = () => {
 
   const fetchUsers = async () => {
     try {
+      // Fetch profiles first
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
         .select('*');
 
       if (profilesError) throw profilesError;
 
-      const { data: rolesData, error: rolesError } = await supabase
-        .from('user_roles')
-        .select('user_id, role');
+      // For each profile, get their role using the function
+      const usersWithRoles = await Promise.all(
+        (profilesData || []).map(async (profile) => {
+          try {
+            const { data: roleData } = await supabase.rpc('get_user_role', {
+              _user_id: profile.id
+            });
 
-      if (rolesError) throw rolesError;
-
-      const usersWithRoles = profilesData?.map(profile => {
-        const userRole = rolesData?.find(role => role.user_id === profile.id);
-        return {
-          ...profile,
-          role: userRole?.role || 'user'
-        };
-      }) || [];
+            return {
+              ...profile,
+              phone: '', // Default empty since field might not exist yet
+              status: 'active', // Default status
+              role: roleData || 'user'
+            } as User;
+          } catch (error) {
+            console.error('Error fetching role for user:', profile.id, error);
+            return {
+              ...profile,
+              phone: '',
+              status: 'active',
+              role: 'user'
+            } as User;
+          }
+        })
+      );
 
       setUsers(usersWithRoles);
     } catch (error) {
@@ -66,7 +79,7 @@ const Usuarios = () => {
 
   const filteredUsers = users.filter(user => 
     user.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchTerm.toLowerCase())
+    user.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const getRoleBadge = (role: string) => {

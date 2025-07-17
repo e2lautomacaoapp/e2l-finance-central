@@ -50,7 +50,7 @@ const Perfil = () => {
       setProfileData({
         full_name: data.full_name || '',
         email: data.email || user.email || '',
-        phone: data.phone || ''
+        phone: '' // Default empty since field might not exist yet
       });
     } catch (error) {
       console.error('Error fetching profile:', error);
@@ -72,7 +72,6 @@ const Perfil = () => {
         .from('profiles')
         .update({
           full_name: profileData.full_name,
-          phone: profileData.phone,
           updated_at: new Date().toISOString()
         })
         .eq('id', user.id);
@@ -209,7 +208,9 @@ const Perfil = () => {
                         onChange={(e) => handleInputChange('phone', e.target.value)}
                         className="pl-8"
                         placeholder="(11) 99999-9999"
+                        disabled
                       />
+                      <small className="text-gray-500">Campo será habilitado em breve</small>
                     </div>
                   </div>
                 </div>
