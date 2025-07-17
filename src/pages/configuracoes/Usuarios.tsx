@@ -37,14 +37,14 @@ const Usuarios = () => {
 
       if (profilesError) throw profilesError;
 
-      const { data: rolesData, error: rolesError } = await supabase
+      const { data: rolesData, error: rolesError } = await (supabase as any)
         .from('user_roles')
         .select('user_id, role');
 
       if (rolesError) throw rolesError;
 
       const usersWithRoles = profilesData?.map(profile => {
-        const userRole = rolesData?.find(role => role.user_id === profile.id);
+        const userRole = rolesData?.find((role: any) => role.user_id === profile.id);
         return {
           ...profile,
           role: userRole?.role || 'user'
