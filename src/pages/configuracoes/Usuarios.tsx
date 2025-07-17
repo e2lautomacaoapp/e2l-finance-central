@@ -42,7 +42,7 @@ const Usuarios = () => {
       const usersWithRoles = await Promise.all(
         (profilesData || []).map(async (profile) => {
           try {
-            const { data: roleData } = await supabase.rpc('get_user_role', {
+            const { data: roleData } = await supabase.rpc('get_user_role' as any, {
               _user_id: profile.id
             });
 

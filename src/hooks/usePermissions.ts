@@ -18,7 +18,7 @@ export const usePermissions = () => {
 
       try {
         // Use a raw SQL query to get user role since the table might not be in types yet
-        const { data, error } = await supabase.rpc('get_user_role', {
+        const { data, error } = await supabase.rpc('get_user_role' as any, {
           _user_id: user.id
         });
 
